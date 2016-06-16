@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>JSON Schema Based Editor - demo</title>
+		<link rel="stylesheet" href="./bootstrap-combined.min.css">
+		<link rel="stylesheet" href="./font-awesome.css">
+		<style>
+
+			#container {
+				position: absolute;
+				left: 5%;
+				right: 5%;
+			}
+
+			.options-wrap {
+				position: relative;
+				height: 100px;
+			}
+
+			.layout-wrap {
+				position: absolute;
+				display: inline-block;
+			}
+
+			.show-error-wrap {
+				position: absolute;
+				left: 300px;
+				display: inline-block;
+			}
+
+			.fn-options-wrap {
+				position: absolute;
+				top: 70px;
+			}
+
+			.fn-options-wrap label {
+				display: inline-block;
+				margin-right: 10px;
+			}
+
+			.fn-options-wrap input {
+				margin: 0;
+			}
+
+			#editor {
+				width: 80%
+			}
+
+
+			#output-wrap h2,
+			#schema-wrap h2,
+			#validation-wrap h2 {
+				margin-top: 30px;
+			}
+
+			#output,
+			#schema,
+			#validation {
+				width: 80%;
+				height: 200px;
+			}
+
+			.common-button {
+			    width: 150px;
+			    height: 32px;
+			    line-height: 32px;
+			    margin-right: 10px;
+			    font-size: 14px;
+			    font-weight: bold;
+			    text-align: center;
+			    border: none;
+			    color: #fff;
+			    cursor: pointer;
+			    background: #3f89ec;
+			    display: block;
+			    border-radius: 6px;
+			    -moz-border-radius: 6px;
+			    -webkit-border-radius: 6px;
+			    transition: .3s;
+			    -moz-transition: .3s;
+			    -o-transition: .3s;
+			    -webkit-transition: .3s;
+			}
+
+		</style>
+
+    	<script src='./jsoneditor.js'></script>
+    	<script src='./schema.js'></script>
+	</head>
+	<body>
+		<div id="container">
+			<div id="editor-wrap">
+				<h2>Editor</h2>
+				<div class="options-wrap">
+	                <div class="layout-wrap">
+	                    <label>布局</label>
+	                    <select id="object_layout" onchange="onChangeLayout(event)" class="form-control">
+	                        <option value="normal">普通</option>
+	                        <option value="grid">网格</option>
+	                    </select>
+	                </div>
+	                <div class="show-error-wrap">
+	                    <label>展示错误</label>
+	                    <select id="show_errors" onchange="onChangeShowError(event)" class="form-control">
+	                        <option value="interaction">交互</option>
+	                        <option value="change">改变</option>
+	                        <option value="always">一直</option>
+	                        <option value="never">从不</option>
+	                    </select>
+	                </div>
+	                <div class="fn-options-wrap">
+                        <label> <input type="checkbox" onclick="clickOptionsHandler(event)" checked="checked" value="disable_collapse">折叠</label>
+                        <label> <input type="checkbox" onclick="clickOptionsHandler(event)" checked="checked" value="disable_edit_json">编辑Json</label>
+                        <label> <input type="checkbox" onclick="clickOptionsHandler(event)" checked="checked" value="disable_properties">属性</label>
+                        <label> <input type="checkbox" onclick="clickOptionsHandler(event)" checked="checked" value="no_additional_properties">添加属性</label>
+                        <label> <input type="checkbox" onclick="clickOptionsHandler(event)" checked="checked" value="disable_array_add">数组添加</label>
+                        <label> <input type="checkbox" onclick="clickOptionsHandler(event)" checked="checked" value="disable_array_reorder">数组移动</label>
+                        <label> <input type="checkbox" onclick="clickOptionsHandler(event)" checked="checked" value="disable_array_delete">数组删除</label>
+	                </div>
+                </div>
+				<div id="editor"></div>
+			</div>
+			<div id="output-wrap">
+				<h2>Output</h2>
+				<textarea id="output"></textarea>
+				<button id='updatevalue' class="common-button" onclick="updateValue(event)">更新至JSON编辑器</button>
+			</div>
+			<div id="validation-wrap">
+				<h2>Validation</h2>
+				<textarea id="validation"></textarea>
+			</div>
+			<div id="schema-wrap">
+				<h2>Schema</h2>
+				<textarea id="schema"></textarea>
+				<button id='updateSchema' class="common-button" onclick="updateSchema(event)">更新Schema</button>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+		    // http://jeremydorn.com/json-editor/
+		    // Divs/textareas on the page
+		    var editor = document.getElementById('editor');
+		    var output = document.getElementById('output');
+		    var validation = document.getElementById('validation');
+		    var schema = document.getElementById('schema');
+
+		    var jsonEditor;
+		    var defaultValue;
+		    var reload = function (keepValue) {
+		    	var startVal = (jsonEditor && keepValue) ? jsonEditor.getValue() : defaultValue;
+		    	defaultValue = undefined;
+
+		    	if (jsonEditor) {
+		    		jsonEditor.destroy();
+		    	}
+
+		    	jsonEditor = new JSONEditor (editor, {
+			    	schema: schemaObj,
+			    	startval: startVal
+			    });
+
+			    jsonEditor.on('change', function () {
+			    	var json = jsonEditor.getValue();
+			    	output.value = JSON.stringify(json, null, 2);
+
+			    	var validatedError = jsonEditor.validate();
+			    	if (0 < validatedError.length) {
+			    		validation.value = JSON.stringify(validatedError, null, 2);
+			    	} else {
+			    		validation.value = 'valid';
+			    	}
+			    });
+		    }
+
+		    var initOptions = function () {
+			    JSONEditor.defaults.options.object_layout = 'normal';
+			    JSONEditor.defaults.options.show_errors = 'interaction';
+			    JSONEditor.defaults.options.required_by_default = true;
+			    JSONEditor.defaults.options.ajax = true;
+			    JSONEditor.defaults.options.no_additional_properties = false;
+			    JSONEditor.defaults.options.disable_collapse = false;
+			    JSONEditor.defaults.options.disable_edit_json = false;
+			    JSONEditor.defaults.options.disable_properties = false;
+			    JSONEditor.defaults.options.disable_array_add = false;
+			    JSONEditor.defaults.options.disable_array_reorder = false;
+			    JSONEditor.defaults.options.disable_array_delete = false;
+
+			    JSONEditor.defaults.options.theme = 'bootstrap2';
+        		JSONEditor.defaults.options.iconlib = 'fontawesome4';
+		    }
+
+		    function clickOptionsHandler(event) {
+		    	JSONEditor.defaults.options[event.target.value] = true != event.target.checked;
+		        reload(true);
+		    }
+
+		    function onChangeLayout(event) {
+		        JSONEditor.defaults.options.object_layout = event.target.value;
+		        reload(true);
+		    }
+
+		    function onChangeShowError(event) {
+		        JSONEditor.defaults.options.show_errors = event.target.value;
+		        reload(true);
+		    }
+
+		    function updateValue(event) {
+		        try {
+		    		jsonEditor.setValue(JSON.parse(output.value));
+		        }
+		        catch(e) {
+		            alert('Invalid JSON: ' + e.message);
+		            return;
+		        }
+		    }
+
+		    function updateSchema(event) {
+		        try {
+		            schemaObj = JSON.parse(schema.value);
+		        }
+		        catch(e) {
+		            alert('Invalid Schema: ' + e.message);
+		            return;
+		        }
+
+		        reload();
+		    }
+
+		    initOptions();
+		    schema.value = JSON.stringify(schemaObj, null, 2);
+		    reload();
+
+		</script>
+	</body>
+</html>
