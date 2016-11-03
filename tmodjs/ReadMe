@@ -1,0 +1,9 @@
+tmodjs
+腾讯的框架 https://github.com/aui/tmodjs/
+
+## 步骤
+- sudo npm install -g tmodjs
+- tmod ./widget --debug --output ./build
+- <script src="./build/template.js"></script>
+- var html = template('main', data);
+  document.getElementById('content').innerHTML = html;

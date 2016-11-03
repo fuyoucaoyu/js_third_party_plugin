@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TEST ARTTEMPLATE</title>
+    <!-- <script src="./libs/template-debug.js"></script> -->
+</head>
+<body>
+
+    <div id="content">loading ... ...</div>
+
+    <script src="./build/template.js"></script>
+
+    <script type="text/javascript">
+        var data = {
+            title: 'test include',
+            time: '2016',
+            list: [{title: '文艺', url: 'http://www.baiud.com'} ,
+                    {title: '博客', url: 'http://www.baiud.com'} ,
+                    {title: '摄影', url: 'http://www.baiud.com'} ,
+                    {title: '电影', url: 'http://www.baiud.com'} ,
+                    {title: '民谣', url: 'http://www.baiud.com'}]
+        };
+        var html = template('main', data);
+        document.getElementById('content').innerHTML = html;
+    </script>
+</body>
+</html>
